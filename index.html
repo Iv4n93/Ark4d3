@@ -58,6 +58,7 @@
             padding: 4px 8px;
             font-size: 14px;
             cursor: pointer;
+            touch-action: manipulation;
         }
         .hud .puntos { color: #00ff88; }
         .hud .combo { color: #ff0077; display: none; }
@@ -101,6 +102,7 @@
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
+            touch-action: manipulation;
         }
         .btn.activo {
             background: #00aa55;
@@ -119,6 +121,7 @@
             font-weight: bold;
             width: 100%;
             box-shadow: 0 4px 15px rgba(0,255,136,0.3);
+            touch-action: manipulation;
         }
         .btn-secundario {
             background: #282838;
@@ -130,6 +133,7 @@
             cursor: pointer;
             font-weight: bold;
             width: 100%;
+            touch-action: manipulation;
         }
         .skin-selector {
             display: flex;
@@ -146,6 +150,7 @@
             cursor: pointer;
             border: 1px solid transparent;
             background: #222230;
+            touch-action: manipulation;
         }
         .skin-opt.selected { border-color: #00ff88; background: #00aa55; }
         .skin-opt.locked { opacity: 0.5; cursor: not-allowed; }
@@ -162,8 +167,8 @@
             </div>
             <span class="record" id="txt-record">Récord: 0</span>
             <div class="hud-controls">
-                <button class="hud-btn" id="btn-audio" onclick="toggleAudio()">🔊</button>
-                <button class="hud-btn" onclick="togglePausa()">⏸️</button>
+                <button class="hud-btn" id="btn-audio">🔊</button>
+                <button class="hud-btn" id="btn-pausa">⏸️</button>
             </div>
         </div>
 
@@ -176,20 +181,20 @@
             
             <p style="font-size: 14px; margin-bottom: 4px;">Skin Seleccionada:</p>
             <div class="skin-selector">
-                <div class="skin-opt selected" id="skin-0" onclick="seleccionarSkin(0)">Verde</div>
-                <div class="skin-opt locked" id="skin-1" onclick="seleccionarSkin(1)">Neón (30 pts)</div>
-                <div class="skin-opt locked" id="skin-2" onclick="seleccionarSkin(2)">Rainbow (60 pts)</div>
+                <div class="skin-opt selected" id="skin-0">Verde</div>
+                <div class="skin-opt locked" id="skin-1">Neón (30 pts)</div>
+                <div class="skin-opt locked" id="skin-2">Rainbow (60 pts)</div>
             </div>
 
             <p style="font-size: 14px; margin-bottom: 4px;">Dificultad:</p>
             <div class="btn-group">
-                <button class="btn" onclick="setDificultad(0)">Fácil</button>
-                <button class="btn activo" onclick="setDificultad(1)">Normal</button>
-                <button class="btn" onclick="setDificultad(2)">Difícil</button>
+                <button class="btn" id="btn-dif-0">Fácil</button>
+                <button class="btn activo" id="btn-dif-1">Normal</button>
+                <button class="btn" id="btn-dif-2">Difícil</button>
             </div>
 
             <div class="btn-columna">
-                <button class="btn-principal" onclick="iniciarJuego()">¡JUGAR!</button>
+                <button class="btn-principal" id="btn-jugar-inicio">¡JUGAR!</button>
             </div>
         </div>
 
@@ -197,8 +202,8 @@
         <div id="menu-pausa" class="overlay oculto">
             <h1>PAUSA</h1>
             <div class="btn-columna" style="margin-top: 15px;">
-                <button class="btn-principal" onclick="togglePausa()">Reanudar</button>
-                <button class="btn-secundario" onclick="volverAlMenu()">Menú Principal</button>
+                <button class="btn-principal" id="btn-reanudar">Reanudar</button>
+                <button class="btn-secundario" id="btn-menu-pausa">Menú Principal</button>
             </div>
         </div>
 
@@ -208,8 +213,8 @@
             <p id="go-score" style="color: #ffd700; font-weight: bold;">Puntuación Final: 0</p>
             <p id="go-stats" style="font-size: 13px; color: #aaa;"></p>
             <div class="btn-columna">
-                <button class="btn-principal" onclick="iniciarJuego()">Volver a Jugar</button>
-                <button class="btn-secundario" onclick="volverAlMenu()">Menú Principal</button>
+                <button class="btn-principal" id="btn-jugar-go">Volver a Jugar</button>
+                <button class="btn-secundario" id="btn-menu-go">Menú Principal</button>
             </div>
         </div>
     </div>
@@ -222,7 +227,6 @@
         function actualizarIconoAudio() {
             document.getElementById('btn-audio').innerText = audioMuted ? '🔇' : '🔊';
         }
-        actualizarIconoAudio();
 
         function toggleAudio() {
             audioMuted = !audioMuted;
@@ -277,7 +281,7 @@
 
         // Entidades
         let comidaX, comidaY;
-        let powerup = null; // {x, y, tipo: 'dorada'|'azul'|'fantasma'|'escudo', tiempo: N}
+        let powerup = null;
         let obstaculos = [];
         let particulas = [];
         let textosFlotantes = [];
@@ -302,8 +306,6 @@
         const menuRecord = document.getElementById('menu-record');
         const goScore = document.getElementById('go-score');
         const goStats = document.getElementById('go-stats');
-
-        actualizarSkinsUI();
 
         function actualizarSkinsUI() {
             menuRecord.innerText = `Récord Actual: ${highscore} pts`;
@@ -332,7 +334,8 @@
 
         function setDificultad(idx) {
             idxDificultad = idx;
-            document.querySelectorAll('.btn-group .btn').forEach((b, i) => {
+            [0, 1, 2].forEach(i => {
+                const b = document.getElementById(`btn-dif-${i}`);
                 if (i === idx) b.classList.add('activo');
                 else b.classList.remove('activo');
             });
@@ -508,7 +511,7 @@
                 localStorage.setItem('snake_pwa_comidas', totalComidas);
 
                 comboCount++;
-                comboTimer = 25; // Ventana de tiempo para combo
+                comboTimer = 25;
                 let ptsGanados = 1 * (comboCount > 1 ? comboCount : 1);
                 puntuacion += ptsGanados;
                 largoSerpiente++;
@@ -568,7 +571,7 @@
             ctx.fillStyle = "#050508";
             ctx.fillRect(0, 0, ANCHO, ALTO);
 
-            // Rejilla Neón
+            // Rejilla
             ctx.strokeStyle = "#12121a";
             for (let cx = 0; cx < ANCHO; cx += TAMANO) {
                 ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, ALTO); ctx.stroke();
@@ -601,16 +604,16 @@
                 }
             }
 
-            // Serpiente con Skin
+            // Serpiente
             cuerpo.forEach((b, i) => {
                 let esCabeza = (i === cuerpo.length - 1);
                 let alpha = (tiempoFantasma > 0) ? 0.4 : 1.0;
 
-                if (skinSeleccionada === 0) { // Clásica
+                if (skinSeleccionada === 0) {
                     ctx.fillStyle = esCabeza ? `rgba(0, 255, 136, ${alpha})` : `rgba(0, 170, 85, ${alpha})`;
-                } else if (skinSeleccionada === 1) { // Neón
+                } else if (skinSeleccionada === 1) {
                     ctx.fillStyle = esCabeza ? `rgba(0, 229, 255, ${alpha})` : `rgba(0, 102, 255, ${alpha})`;
-                } else if (skinSeleccionada === 2) { // Rainbow
+                } else if (skinSeleccionada === 2) {
                     let hue = (i * 20 + Date.now() / 10) % 360;
                     ctx.fillStyle = `hsla(${hue}, 100%, 50%, ${alpha})`;
                 }
@@ -644,9 +647,38 @@
             });
         }
 
+        // --- BINDING DE EVENTOS PARA GITHUB PAGES / CSP ---
+        window.addEventListener('DOMContentLoaded', () => {
+            actualizarIconoAudio();
+            actualizarSkinsUI();
+
+            // HUD
+            document.getElementById('btn-audio').addEventListener('click', e => { e.stopPropagation(); toggleAudio(); });
+            document.getElementById('btn-pausa').addEventListener('click', e => { e.stopPropagation(); togglePausa(); });
+
+            // Skins
+            document.getElementById('skin-0').addEventListener('click', e => { e.stopPropagation(); seleccionarSkin(0); });
+            document.getElementById('skin-1').addEventListener('click', e => { e.stopPropagation(); seleccionarSkin(1); });
+            document.getElementById('skin-2').addEventListener('click', e => { e.stopPropagation(); seleccionarSkin(2); });
+
+            // Dificultades
+            document.getElementById('btn-dif-0').addEventListener('click', e => { e.stopPropagation(); setDificultad(0); });
+            document.getElementById('btn-dif-1').addEventListener('click', e => { e.stopPropagation(); setDificultad(1); });
+            document.getElementById('btn-dif-2').addEventListener('click', e => { e.stopPropagation(); setDificultad(2); });
+
+            // Botones de Acción
+            document.getElementById('btn-jugar-inicio').addEventListener('click', e => { e.stopPropagation(); iniciarJuego(); });
+            document.getElementById('btn-reanudar').addEventListener('click', e => { e.stopPropagation(); togglePausa(); });
+            document.getElementById('btn-menu-pausa').addEventListener('click', e => { e.stopPropagation(); volverAlMenu(); });
+            document.getElementById('btn-jugar-go').addEventListener('click', e => { e.stopPropagation(); iniciarJuego(); });
+            document.getElementById('btn-menu-go').addEventListener('click', e => { e.stopPropagation(); volverAlMenu(); });
+        });
+
         // --- CONTROLES TÁCTILES Y TECLADO ---
         let xInicio = null, yInicio = null;
         window.addEventListener('touchstart', e => {
+            // Evitar interferencia si el toque es en un botón u overlay
+            if (e.target.tagName === 'BUTTON' || e.target.classList.contains('skin-opt')) return;
             xInicio = e.touches[0].clientX; yInicio = e.touches[0].clientY;
         }, { passive: false });
 
