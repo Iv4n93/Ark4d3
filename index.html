@@ -77,6 +77,7 @@
         h2 { color: #ff3333; margin-bottom: 10px; font-size: 28px; }
         p { margin-bottom: 15px; font-size: 18px; }
         .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn-columna { display: flex; flex-direction: column; gap: 12px; width: 80%; max-width: 250px; }
         .btn {
             background: #2a2a2a;
             color: #ffffff;
@@ -96,12 +97,34 @@
             background: #008000;
             color: #ffffff;
             border: none;
-            padding: 14px 32px;
-            font-size: 20px;
+            padding: 14px 24px;
+            font-size: 18px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
-            margin-top: 10px;
+            width: 100%;
+        }
+        .btn-secundario {
+            background: #333333;
+            color: #ffffff;
+            border: 1px solid #666666;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+        .btn-peligro {
+            background: #800000;
+            color: #ffffff;
+            border: 1px solid #ff3333;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
         }
     </style>
 </head>
@@ -126,19 +149,26 @@
                 <button class="btn activo" onclick="setDificultad(1)">Normal</button>
                 <button class="btn" onclick="setDificultad(2)">Difícil</button>
             </div>
-            <button class="btn-principal" onclick="iniciarJuego()">¡JUGAR!</button>
+            <div class="btn-columna">
+                <button class="btn-principal" onclick="iniciarJuego()">¡JUGAR!</button>
+                <button class="btn-peligro" onclick="salirDelJuego()">Salir</button>
+            </div>
         </div>
 
         <!-- PANTALLA GAME OVER -->
         <div id="menu-gameover" class="overlay oculto">
             <h2>¡GAME OVER!</h2>
             <p id="go-score" style="color: #ffd700;">Puntuación Final: 0</p>
-            <button class="btn-principal" onclick="iniciarJuego()">Volver a Jugar</button>
+            <div class="btn-columna">
+                <button class="btn-principal" onclick="iniciarJuego()">Volver a Jugar</button>
+                <button class="btn-secundario" onclick="volverAlMenu()">Menú Principal</button>
+                <button class="btn-peligro" onclick="salirDelJuego()">Salir</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Web Audio API sintetizada (Remplazo de los efectos de Pygame)
+        // Web Audio API sintetizada
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function playSound(freqInit, freqEnd, duration, type = 'sine') {
@@ -272,6 +302,24 @@
             bucleJuego();
         }
 
+        function volverAlMenu() {
+            juegoActivo = false;
+            menuRecord.innerText = `Récord Actual: ${highscore}`;
+            menuGameOver.classList.add('oculto');
+            menuInicio.classList.remove('oculto');
+        }
+
+        function salirDelJuego() {
+            juegoActivo = false;
+            // Intenta cerrar la pestaña/app
+            window.close();
+            
+            // Si el navegador bloquea window.close(), redirige a una página en blanco o muestra mensaje
+            setTimeout(() => {
+                window.location.href = "about:blank";
+            }, 300);
+        }
+
         function actualizarHUD() {
             txtPuntos.innerText = `Puntos: ${puntuacion}`;
             txtRecord.innerText = `Récord: ${highscore}`;
@@ -394,7 +442,7 @@
             // Serpiente
             cuerpo.forEach((bloque, idx) => {
                 ctx.fillStyle = (idx === cuerpo.length - 1) ? "#00FF00" : "#00B400";
-                ctx.fillRect(bloque.x, bloque[y] ? bloque.y : bloque.y, TAMANO_BLOQUE, TAMANO_BLOQUE);
+                ctx.fillRect(bloque.x, bloque.y, TAMANO_BLOQUE, TAMANO_BLOQUE);
             });
         }
 
