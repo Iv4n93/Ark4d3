@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Snake Deluxe PWA</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+        }
+        .hud {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: #1e1e1e;
+            border-radius: 8px 8px 0 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .hud .puntos { color: #ffffff; }
+        .hud .dificultad { color: #64b5f6; }
+        .hud .record { color: #ffd700; }
+        canvas {
+            background-color: #000000;
+            border: 2px solid #333333;
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.88);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            padding: 20px;
+            text-align: center;
+        }
+        .oculto { display: none !important; }
+        h1 { color: #00ff00; margin-bottom: 10px; font-size: 32px; }
+        h2 { color: #ff3333; margin-bottom: 10px; font-size: 28px; }
+        p { margin-bottom: 15px; font-size: 18px; }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn {
+            background: #2a2a2a;
+            color: #ffffff;
+            border: 2px solid #555555;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn.activo {
+            background: #008000;
+            border-color: #00ff00;
+            color: #ffd700;
+        }
+        .btn-principal {
+            background: #008000;
+            color: #ffffff;
+            border: none;
+            padding: 14px 32px;
+            font-size: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div class="hud">
+            <span class="puntos" id="txt-puntos">Puntos: 0</span>
+            <span class="dificultad" id="txt-dif">[Normal]</span>
+            <span class="record" id="txt-record">Récord: 0</span>
+        </div>
+
+        <canvas id="canvas" width="600" height="400"></canvas>
+
+        <!-- PANTALLA DE INICIO -->
+        <div id="menu-inicio" class="overlay">
+            <h1>SNAKE DELUXE</h1>
+            <p id="menu-record">Récord Actual: 0</p>
+            <p style="color: #64b5f6; margin-bottom: 8px;">Selecciona Dificultad:</p>
+            <div class="btn-group">
+                <button class="btn" onclick="setDificultad(0)">Fácil</button>
+                <button class="btn activo" onclick="setDificultad(1)">Normal</button>
+                <button class="btn" onclick="setDificultad(2)">Difícil</button>
+            </div>
+            <button class="btn-principal" onclick="iniciarJuego()">¡JUGAR!</button>
+        </div>
+
+        <!-- PANTALLA GAME OVER -->
+        <div id="menu-gameover" class="overlay oculto">
+            <h2>¡GAME OVER!</h2>
+            <p id="go-score" style="color: #ffd700;">Puntuación Final: 0</p>
+            <button class="btn-principal" onclick="iniciarJuego()">Volver a Jugar</button>
+        </div>
+    </div>
+
+    <script>
+        // Web Audio API sintetizada (Remplazo de los efectos de Pygame)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(freqInit, freqEnd, duration, type = 'sine') {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freqInit, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(freqEnd, audioCtx.currentTime + duration);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        const sndComer = () => playSound(523, 880, 0.1);
+        const sndDorada = () => playSound(880, 1400, 0.18);
+        const sndGameOver = () => playSound(350, 40, 0.6, 'sawtooth');
+
+        // Configuración y variables del juego
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const TAMANO_BLOQUE = 20;
+        const ANCHO = canvas.width;
+        const ALTO = canvas.height;
+
+        const DIFICULTADES = [
+            { nombre: "Fácil", fps: 7, inc: 0.5 },
+            { nombre: "Normal", fps: 10, inc: 1 },
+            { nombre: "Difícil", fps: 15, inc: 1.5 }
+        ];
+        let idxDificultad = 1;
+
+        let highscore = parseInt(localStorage.getItem('snake_pwa_highscore')) || 0;
+        let x, y, dx, dy, proximoDx, proximoDy, cambioRealizado;
+        let cuerpo = [], largoSerpiente = 1, puntuacion = 0, fpsActual = 10;
+        let juegoActivo = false;
+
+        let comidaX, comidaY;
+        let doradaX = null, doradaY = null, tiempoDorada = 0;
+        const DURACION_DORADA_MAX = 100;
+
+        let obstaculos = [];
+        const CANTIDAD_OBSTACULOS = 4;
+
+        // HUD Elements
+        const txtPuntos = document.getElementById('txt-puntos');
+        const txtDif = document.getElementById('txt-dif');
+        const txtRecord = document.getElementById('txt-record');
+        const menuInicio = document.getElementById('menu-inicio');
+        const menuGameOver = document.getElementById('menu-gameover');
+        const menuRecord = document.getElementById('menu-record');
+        const goScore = document.getElementById('go-score');
+
+        menuRecord.innerText = `Récord Actual: ${highscore}`;
+        txtRecord.innerText = `Récord: ${highscore}`;
+
+        function setDificultad(idx) {
+            idxDificultad = idx;
+            const btns = document.querySelectorAll('.btn-group .btn');
+            btns.forEach((btn, i) => {
+                if (i === idx) btn.classList.add('activo');
+                else btn.classList.remove('activo');
+            });
+            txtDif.innerText = `[${DIFICULTADES[idx].nombre}]`;
+        }
+
+        function generarPosicionValida(excluir = []) {
+            while (true) {
+                let cx = Math.floor(Math.random() * (ANCHO / TAMANO_BLOQUE)) * TAMANO_BLOQUE;
+                let cy = Math.floor(Math.random() * (ALTO / TAMANO_BLOQUE)) * TAMANO_BLOQUE;
+                let enObstaculo = obstaculos.some(o => o.x === cx && o.y === cy);
+                let enCuerpo = cuerpo.some(c => c.x === cx && c.y === cy);
+                let enExcluir = excluir.some(e => e.x === cx && e.y === cy);
+
+                if (!enObstaculo && !enCuerpo && !enExcluir) return { x: cx, y: cy };
+            }
+        }
+
+        function regenerarObstaculos() {
+            obstaculos = [];
+            let casillaFrente = { x: x + dx, y: y + dy };
+            let exclusiones = [...cuerpo, { x, y }, casillaFrente];
+            if (comidaX !== undefined) exclusiones.push({ x: comidaX, y: comidaY });
+
+            for (let i = 0; i < CANTIDAD_OBSTACULOS; i++) {
+                let pos = generarPosicionValida(exclusiones);
+                obstaculos.push(pos);
+            }
+        }
+
+        function intentarGenerarDorada() {
+            if (doradaX === null && Math.random() < 0.25) {
+                let pos = generarPosicionValida([{ x: comidaX, y: comidaY }]);
+                doradaX = pos.x;
+                doradaY = pos.y;
+                tiempoDorada = DURACION_DORADA_MAX;
+            }
+        }
+
+        function iniciarJuego() {
+            x = ANCHO / 2;
+            y = ALTO / 2;
+            dx = TAMANO_BLOQUE;
+            dy = 0;
+            proximoDx = TAMANO_BLOQUE;
+            proximoDy = 0;
+            cambioRealizado = false;
+
+            cuerpo = [{ x, y }];
+            largoSerpiente = 1;
+            puntuacion = 0;
+            fpsActual = DIFICULTADES[idxDificultad].fps;
+            doradaX = null;
+            doradaY = null;
+            tiempoDorada = 0;
+
+            let posComida = generarPosicionValida();
+            comidaX = posComida.x;
+            comidaY = posComida.y;
+
+            regenerarObstaculos();
+
+            juegoActivo = true;
+            menuInicio.classList.add('oculto');
+            menuGameOver.classList.add('oculto');
+            
+            actualizarHUD();
+            bucleJuego();
+        }
+
+        function actualizarHUD() {
+            txtPuntos.innerText = `Puntos: ${puntuacion}`;
+            txtRecord.innerText = `Récord: ${highscore}`;
+        }
+
+        function bucleJuego() {
+            if (!juegoActivo) return;
+
+            dx = proximoDx;
+            dy = proximoDy;
+            cambioRealizado = false;
+
+            x += dx;
+            y += dy;
+
+            // Teletransporte en bordes
+            if (x < 0) x = ANCHO - TAMANO_BLOQUE;
+            else if (x >= ANCHO) x = 0;
+            if (y < 0) y = ALTO - TAMANO_BLOQUE;
+            else if (y >= ALTO) y = 0;
+
+            // Choques
+            let choqueObstaculo = obstaculos.some(o => o.x === x && o.y === y);
+            let choqueCuerpo = cuerpo.some(c => c.x === x && c.y === y);
+
+            if (choqueObstaculo || choqueCuerpo) {
+                sndGameOver();
+                juegoActivo = false;
+                goScore.innerText = `Puntuación Final: ${puntuacion}`;
+                menuGameOver.classList.remove('oculto');
+                return;
+            }
+
+            cuerpo.push({ x, y });
+            if (cuerpo.length > largoSerpiente) cuerpo.shift();
+
+            // Comer Roja
+            if (x === comidaX && y === comidaY) {
+                sndComer();
+                puntuacion += 1;
+                largoSerpiente += 1;
+                let nuevaPos = generarPosicionValida();
+                comidaX = nuevaPos.x;
+                comidaY = nuevaPos.y;
+                intentarGenerarDorada();
+
+                if (puntuacion % 3 === 0) {
+                    fpsActual += DIFICULTADES[idxDificultad].inc;
+                }
+                if (puntuacion > highscore) {
+                    highscore = puntuacion;
+                    localStorage.setItem('snake_pwa_highscore', highscore);
+                }
+                actualizarHUD();
+            }
+
+            // Comer Dorada
+            if (doradaX !== null && x === doradaX && y === doradaY) {
+                sndDorada();
+                puntuacion += 3;
+                largoSerpiente += 1;
+                doradaX = null;
+                doradaY = null;
+                tiempoDorada = 0;
+                regenerarObstaculos();
+
+                if (puntuacion > highscore) {
+                    highscore = puntuacion;
+                    localStorage.setItem('snake_pwa_highscore', highscore);
+                }
+                actualizarHUD();
+            }
+
+            // Temporizador Dorada
+            if (doradaX !== null) {
+                tiempoDorada--;
+                if (tiempoDorada <= 0) {
+                    doradaX = null;
+                    doradaY = null;
+                }
+            }
+
+            dibujar();
+            setTimeout(bucleJuego, 1000 / fpsActual);
+        }
+
+        function dibujar() {
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, ANCHO, ALTO);
+
+            // Rejilla
+            ctx.strokeStyle = "#191919";
+            for (let cx = 0; cx < ANCHO; cx += TAMANO_BLOQUE) {
+                ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, ALTO); ctx.stroke();
+            }
+            for (let cy = 0; cy < ALTO; cy += TAMANO_BLOQUE) {
+                ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(ANCHO, cy); ctx.stroke();
+            }
+
+            // Obstáculos
+            ctx.fillStyle = "#808080";
+            obstaculos.forEach(o => ctx.fillRect(o.x, o.y, TAMANO_BLOQUE, TAMANO_BLOQUE));
+
+            // Manzana Roja
+            ctx.fillStyle = "#FF0000";
+            ctx.fillRect(comidaX, comidaY, TAMANO_BLOQUE, TAMANO_BLOQUE);
+
+            // Manzana Dorada (Parpadeo)
+            if (doradaX !== null) {
+                if (tiempoDorada > 20 || (tiempoDorada % 4 < 2)) {
+                    ctx.fillStyle = "#FFD700";
+                    ctx.fillRect(doradaX, doradaY, TAMANO_BLOQUE, TAMANO_BLOQUE);
+                }
+                // Barra de tiempo dorada
+                ctx.fillStyle = "#FFD700";
+                let anchoBarra = Math.floor(100 * (tiempoDorada / DURACION_DORADA_MAX));
+                ctx.fillRect(ANCHO / 2 - 50, 6, anchoBarra, 4);
+            }
+
+            // Serpiente
+            cuerpo.forEach((bloque, idx) => {
+                ctx.fillStyle = (idx === cuerpo.length - 1) ? "#00FF00" : "#00B400";
+                ctx.fillRect(bloque.x, bloque[y] ? bloque.y : bloque.y, TAMANO_BLOQUE, TAMANO_BLOQUE);
+            });
+        }
+
+        // --- GESTOS TÁCTILES (SWIPES) ---
+        let xInicio = null, yInicio = null;
+
+        window.addEventListener('touchstart', e => {
+            xInicio = e.touches[0].clientX;
+            yInicio = e.touches[0].clientY;
+        }, { passive: false });
+
+        window.addEventListener('touchmove', e => {
+            if (!xInicio || !yInicio || cambioRealizado || !juegoActivo) return;
+
+            let xDif = xInicio - e.touches[0].clientX;
+            let yDif = yInicio - e.touches[0].clientY;
+
+            if (Math.abs(xDif) > Math.abs(yDif)) {
+                if (xDif > 0 && dx === 0) { proximoDx = -TAMANO_BLOQUE; proximoDy = 0; cambioRealizado = true; }
+                else if (xDif < 0 && dx === 0) { proximoDx = TAMANO_BLOQUE; proximoDy = 0; cambioRealizado = true; }
+            } else {
+                if (yDif > 0 && dy === 0) { proximoDx = 0; proximoDy = -TAMANO_BLOQUE; cambioRealizado = true; }
+                else if (yDif < 0 && dy === 0) { proximoDx = 0; proximoDy = TAMANO_BLOQUE; cambioRealizado = true; }
+            }
+            xInicio = null;
+            yInicio = null;
+        }, { passive: false });
+
+        // Controles de Teclado
+        window.addEventListener('keydown', e => {
+            if (!juegoActivo || cambioRealizado) return;
+            if ((e.key === 'ArrowLeft' || e.key === 'a') && dx === 0) { proximoDx = -TAMANO_BLOQUE; proximoDy = 0; cambioRealizado = true; }
+            if ((e.key === 'ArrowRight' || e.key === 'd') && dx === 0) { proximoDx = TAMANO_BLOQUE; proximoDy = 0; cambioRealizado = true; }
+            if ((e.key === 'ArrowUp' || e.key === 'w') && dy === 0) { proximoDx = 0; proximoDy = -TAMANO_BLOQUE; cambioRealizado = true; }
+            if ((e.key === 'ArrowDown' || e.key === 's') && dy === 0) { proximoDx = 0; proximoDy = TAMANO_BLOQUE; cambioRealizado = true; }
+        });
+
+        // Registrar Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+    </script>
+</body>
+</html>
