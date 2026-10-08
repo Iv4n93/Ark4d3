@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Snake Deluxe PWA</title>
+    <title>Snake Arcade Deluxe PWA</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,9 +18,9 @@
             padding: 0;
         }
         body {
-            background-color: #121212;
+            background-color: #0d0d11;
             color: #ffffff;
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -35,6 +35,7 @@
             align-items: center;
             width: 100%;
             max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0,255,136,0.1);
         }
         .hud {
             width: 100%;
@@ -42,17 +43,29 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 15px;
-            background: #1e1e1e;
-            border-radius: 8px 8px 0 0;
-            font-size: 16px;
+            background: #16161f;
+            border-radius: 10px 10px 0 0;
+            font-size: 15px;
             font-weight: bold;
+            border-bottom: 2px solid #282838;
         }
-        .hud .puntos { color: #ffffff; }
-        .hud .dificultad { color: #64b5f6; }
+        .hud-controls { display: flex; gap: 8px; align-items: center; }
+        .hud-btn {
+            background: #282838;
+            color: #fff;
+            border: 1px solid #444466;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .hud .puntos { color: #00ff88; }
+        .hud .combo { color: #ff0077; display: none; }
+        .hud .escudo { color: #00d9ff; }
         .hud .record { color: #ffd700; }
         canvas {
-            background-color: #000000;
-            border: 2px solid #333333;
+            background-color: #050508;
+            border: 2px solid #282838;
             max-width: 100%;
             height: auto;
             display: block;
@@ -63,7 +76,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.88);
+            background: rgba(10, 10, 15, 0.92);
+            backdrop-filter: blur(4px);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -73,96 +87,129 @@
             text-align: center;
         }
         .oculto { display: none !important; }
-        h1 { color: #00ff00; margin-bottom: 10px; font-size: 32px; }
-        h2 { color: #ff3333; margin-bottom: 10px; font-size: 28px; }
-        p { margin-bottom: 15px; font-size: 18px; }
-        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        .btn-columna { display: flex; flex-direction: column; gap: 12px; width: 80%; max-width: 250px; }
+        h1 { color: #00ff88; margin-bottom: 5px; font-size: 30px; text-shadow: 0 0 10px rgba(0,255,136,0.5); }
+        h2 { color: #ff3355; margin-bottom: 10px; font-size: 28px; }
+        p { margin-bottom: 12px; font-size: 16px; color: #ccc; }
+        .btn-group { display: flex; gap: 8px; margin-bottom: 15px; }
+        .btn-columna { display: flex; flex-direction: column; gap: 10px; width: 85%; max-width: 260px; }
         .btn {
-            background: #2a2a2a;
+            background: #1e1e2a;
             color: #ffffff;
-            border: 2px solid #555555;
-            padding: 10px 20px;
+            border: 1px solid #3d3d5c;
+            padding: 8px 16px;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
         }
         .btn.activo {
-            background: #008000;
-            border-color: #00ff00;
-            color: #ffd700;
+            background: #00aa55;
+            border-color: #00ff88;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(0,255,136,0.4);
         }
         .btn-principal {
-            background: #008000;
+            background: #00aa55;
             color: #ffffff;
             border: none;
-            padding: 14px 24px;
-            font-size: 18px;
+            padding: 12px 20px;
+            font-size: 17px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             width: 100%;
+            box-shadow: 0 4px 15px rgba(0,255,136,0.3);
         }
         .btn-secundario {
-            background: #333333;
+            background: #282838;
             color: #ffffff;
-            border: 1px solid #666666;
-            padding: 12px 24px;
-            font-size: 16px;
+            border: 1px solid #444466;
+            padding: 10px 20px;
+            font-size: 15px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             width: 100%;
         }
-        .btn-peligro {
-            background: #800000;
-            color: #ffffff;
-            border: 1px solid #ff3333;
-            padding: 12px 24px;
-            font-size: 16px;
+        .skin-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            background: #16161f;
+            padding: 8px;
             border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            width: 100%;
         }
+        .skin-opt {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            background: #222230;
+        }
+        .skin-opt.selected { border-color: #00ff88; background: #00aa55; }
+        .skin-opt.locked { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
     <div id="game-container">
         <div class="hud">
-            <span class="puntos" id="txt-puntos">Puntos: 0</span>
-            <span class="dificultad" id="txt-dif">[Normal]</span>
+            <div>
+                <span class="puntos" id="txt-puntos">Pts: 0</span>
+                <span class="combo" id="txt-combo">x2</span>
+                <span class="escudo" id="txt-escudo">🛡️</span>
+            </div>
             <span class="record" id="txt-record">Récord: 0</span>
+            <div class="hud-controls">
+                <button class="hud-btn" id="btn-audio" onclick="toggleAudio()">🔊</button>
+                <button class="hud-btn" onclick="togglePausa()">⏸️</button>
+            </div>
         </div>
 
         <canvas id="canvas" width="600" height="400"></canvas>
 
-        <!-- PANTALLA DE INICIO -->
+        <!-- MENU INICIO -->
         <div id="menu-inicio" class="overlay">
-            <h1>SNAKE DELUXE</h1>
-            <p id="menu-record">Récord Actual: 0</p>
-            <p style="color: #64b5f6; margin-bottom: 8px;">Selecciona Dificultad:</p>
+            <h1>SNAKE ARCADE</h1>
+            <p id="menu-record">Récord: 0</p>
+            
+            <p style="font-size: 14px; margin-bottom: 4px;">Skin Seleccionada:</p>
+            <div class="skin-selector">
+                <div class="skin-opt selected" id="skin-0" onclick="seleccionarSkin(0)">Verde</div>
+                <div class="skin-opt locked" id="skin-1" onclick="seleccionarSkin(1)">Neón (30 pts)</div>
+                <div class="skin-opt locked" id="skin-2" onclick="seleccionarSkin(2)">Rainbow (60 pts)</div>
+            </div>
+
+            <p style="font-size: 14px; margin-bottom: 4px;">Dificultad:</p>
             <div class="btn-group">
                 <button class="btn" onclick="setDificultad(0)">Fácil</button>
                 <button class="btn activo" onclick="setDificultad(1)">Normal</button>
                 <button class="btn" onclick="setDificultad(2)">Difícil</button>
             </div>
+
             <div class="btn-columna">
                 <button class="btn-principal" onclick="iniciarJuego()">¡JUGAR!</button>
-                <button class="btn-peligro" onclick="salirDelJuego()">Salir</button>
             </div>
         </div>
 
-        <!-- PANTALLA GAME OVER -->
+        <!-- PAUSA -->
+        <div id="menu-pausa" class="overlay oculto">
+            <h1>PAUSA</h1>
+            <div class="btn-columna" style="margin-top: 15px;">
+                <button class="btn-principal" onclick="togglePausa()">Reanudar</button>
+                <button class="btn-secundario" onclick="volverAlMenu()">Menú Principal</button>
+            </div>
+        </div>
+
+        <!-- GAME OVER -->
         <div id="menu-gameover" class="overlay oculto">
             <h2>¡GAME OVER!</h2>
-            <p id="go-score" style="color: #ffd700;">Puntuación Final: 0</p>
+            <p id="go-score" style="color: #ffd700; font-weight: bold;">Puntuación Final: 0</p>
+            <p id="go-stats" style="font-size: 13px; color: #aaa;"></p>
             <div class="btn-columna">
                 <button class="btn-principal" onclick="iniciarJuego()">Volver a Jugar</button>
                 <button class="btn-secundario" onclick="volverAlMenu()">Menú Principal</button>
-                <button class="btn-peligro" onclick="salirDelJuego()">Salir</button>
             </div>
         </div>
     </div>
@@ -170,78 +217,131 @@
     <script>
         // Web Audio API sintetizada
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioMuted = localStorage.getItem('snake_muted') === 'true';
+
+        function actualizarIconoAudio() {
+            document.getElementById('btn-audio').innerText = audioMuted ? '🔇' : '🔊';
+        }
+        actualizarIconoAudio();
+
+        function toggleAudio() {
+            audioMuted = !audioMuted;
+            localStorage.setItem('snake_muted', audioMuted);
+            actualizarIconoAudio();
+        }
 
         function playSound(freqInit, freqEnd, duration, type = 'sine') {
+            if (audioMuted) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freqInit, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(freqEnd, audioCtx.currentTime + duration);
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freqInit, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(freqEnd, audioCtx.currentTime + duration);
+                gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
         }
 
         const sndComer = () => playSound(523, 880, 0.1);
-        const sndDorada = () => playSound(880, 1400, 0.18);
+        const sndPowerup = () => playSound(400, 1200, 0.25, 'triangle');
+        const sndEscudo = () => playSound(300, 900, 0.3, 'square');
         const sndGameOver = () => playSound(350, 40, 0.6, 'sawtooth');
 
         // Configuración y variables del juego
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const TAMANO_BLOQUE = 20;
+        const TAMANO = 20;
         const ANCHO = canvas.width;
         const ALTO = canvas.height;
 
         const DIFICULTADES = [
-            { nombre: "Fácil", fps: 7, inc: 0.5 },
-            { nombre: "Normal", fps: 10, inc: 1 },
-            { nombre: "Difícil", fps: 15, inc: 1.5 }
+            { nombre: "Fácil", fps: 7, inc: 0.4 },
+            { nombre: "Normal", fps: 10, inc: 0.8 },
+            { nombre: "Difícil", fps: 14, inc: 1.2 }
         ];
         let idxDificultad = 1;
 
         let highscore = parseInt(localStorage.getItem('snake_pwa_highscore')) || 0;
+        let totalComidas = parseInt(localStorage.getItem('snake_pwa_comidas')) || 0;
+        let skinSeleccionada = parseInt(localStorage.getItem('snake_pwa_skin')) || 0;
+
         let x, y, dx, dy, proximoDx, proximoDy, cambioRealizado;
         let cuerpo = [], largoSerpiente = 1, puntuacion = 0, fpsActual = 10;
-        let juegoActivo = false;
+        let juegoActivo = false, juegoPausado = false;
 
+        // Entidades
         let comidaX, comidaY;
-        let doradaX = null, doradaY = null, tiempoDorada = 0;
-        const DURACION_DORADA_MAX = 100;
-
+        let powerup = null; // {x, y, tipo: 'dorada'|'azul'|'fantasma'|'escudo', tiempo: N}
         let obstaculos = [];
-        const CANTIDAD_OBSTACULOS = 4;
+        let particulas = [];
+        let textosFlotantes = [];
 
-        // HUD Elements
+        // Estado de Efectos / Power-ups
+        let tieneEscudo = false;
+        let tiempoFantasma = 0;
+        let tiempoLentitud = 0;
+
+        // Combos
+        let comboCount = 0;
+        let comboTimer = 0;
+
+        // UI Refs
         const txtPuntos = document.getElementById('txt-puntos');
-        const txtDif = document.getElementById('txt-dif');
+        const txtCombo = document.getElementById('txt-combo');
+        const txtEscudo = document.getElementById('txt-escudo');
         const txtRecord = document.getElementById('txt-record');
         const menuInicio = document.getElementById('menu-inicio');
+        const menuPausa = document.getElementById('menu-pausa');
         const menuGameOver = document.getElementById('menu-gameover');
         const menuRecord = document.getElementById('menu-record');
         const goScore = document.getElementById('go-score');
+        const goStats = document.getElementById('go-stats');
 
-        menuRecord.innerText = `Récord Actual: ${highscore}`;
-        txtRecord.innerText = `Récord: ${highscore}`;
+        actualizarSkinsUI();
+
+        function actualizarSkinsUI() {
+            menuRecord.innerText = `Récord Actual: ${highscore} pts`;
+            txtRecord.innerText = `Récord: ${highscore}`;
+
+            const s1 = document.getElementById('skin-1');
+            const s2 = document.getElementById('skin-2');
+
+            if (highscore >= 30) { s1.classList.remove('locked'); s1.innerText = "Neón"; }
+            if (highscore >= 60) { s2.classList.remove('locked'); s2.innerText = "Rainbow"; }
+
+            [0, 1, 2].forEach(i => {
+                const el = document.getElementById(`skin-${i}`);
+                if (i === skinSeleccionada) el.classList.add('selected');
+                else el.classList.remove('selected');
+            });
+        }
+
+        function seleccionarSkin(idx) {
+            if (idx === 1 && highscore < 30) return;
+            if (idx === 2 && highscore < 60) return;
+            skinSeleccionada = idx;
+            localStorage.setItem('snake_pwa_skin', idx);
+            actualizarSkinsUI();
+        }
 
         function setDificultad(idx) {
             idxDificultad = idx;
-            const btns = document.querySelectorAll('.btn-group .btn');
-            btns.forEach((btn, i) => {
-                if (i === idx) btn.classList.add('activo');
-                else btn.classList.remove('activo');
+            document.querySelectorAll('.btn-group .btn').forEach((b, i) => {
+                if (i === idx) b.classList.add('activo');
+                else b.classList.remove('activo');
             });
-            txtDif.innerText = `[${DIFICULTADES[idx].nombre}]`;
         }
 
         function generarPosicionValida(excluir = []) {
             while (true) {
-                let cx = Math.floor(Math.random() * (ANCHO / TAMANO_BLOQUE)) * TAMANO_BLOQUE;
-                let cy = Math.floor(Math.random() * (ALTO / TAMANO_BLOQUE)) * TAMANO_BLOQUE;
+                let cx = Math.floor(Math.random() * (ANCHO / TAMANO)) * TAMANO;
+                let cy = Math.floor(Math.random() * (ALTO / TAMANO)) * TAMANO;
                 let enObstaculo = obstaculos.some(o => o.x === cx && o.y === cy);
                 let enCuerpo = cuerpo.some(c => c.x === cx && c.y === cy);
                 let enExcluir = excluir.some(e => e.x === cx && e.y === cy);
@@ -252,235 +352,330 @@
 
         function regenerarObstaculos() {
             obstaculos = [];
-            let casillaFrente = { x: x + dx, y: y + dy };
-            let exclusiones = [...cuerpo, { x, y }, casillaFrente];
+            let exclusiones = [...cuerpo, { x, y }];
             if (comidaX !== undefined) exclusiones.push({ x: comidaX, y: comidaY });
 
-            for (let i = 0; i < CANTIDAD_OBSTACULOS; i++) {
-                let pos = generarPosicionValida(exclusiones);
-                obstaculos.push(pos);
+            for (let i = 0; i < 4; i++) {
+                obstaculos.push(generarPosicionValida(exclusiones));
             }
         }
 
-        function intentarGenerarDorada() {
-            if (doradaX === null && Math.random() < 0.25) {
+        function intentarGenerarPowerup() {
+            if (powerup === null && Math.random() < 0.35) {
+                let r = Math.random();
+                let tipo = 'dorada';
+                if (r < 0.35) tipo = 'azul';
+                else if (r < 0.65) tipo = 'fantasma';
+                else if (r < 0.85) tipo = 'escudo';
+
                 let pos = generarPosicionValida([{ x: comidaX, y: comidaY }]);
-                doradaX = pos.x;
-                doradaY = pos.y;
-                tiempoDorada = DURACION_DORADA_MAX;
+                powerup = { x: pos.x, y: pos.y, tipo: tipo, tiempo: 90 };
             }
+        }
+
+        function crearParticulas(px, py, color, cant = 8) {
+            for (let i = 0; i < cant; i++) {
+                particulas.push({
+                    x: px + TAMANO / 2,
+                    y: py + TAMANO / 2,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    life: 1.0,
+                    color: color
+                });
+            }
+        }
+
+        function agregarTextoFlotante(txt, px, py, color = '#ffffff') {
+            textosFlotantes.push({ txt, x: px, y: py, life: 1.0, color });
         }
 
         function iniciarJuego() {
-            x = ANCHO / 2;
-            y = ALTO / 2;
-            dx = TAMANO_BLOQUE;
-            dy = 0;
-            proximoDx = TAMANO_BLOQUE;
-            proximoDy = 0;
+            x = ANCHO / 2; y = ALTO / 2;
+            dx = TAMANO; dy = 0;
+            proximoDx = TAMANO; proximoDy = 0;
             cambioRealizado = false;
 
             cuerpo = [{ x, y }];
             largoSerpiente = 1;
             puntuacion = 0;
             fpsActual = DIFICULTADES[idxDificultad].fps;
-            doradaX = null;
-            doradaY = null;
-            tiempoDorada = 0;
 
-            let posComida = generarPosicionValida();
-            comidaX = posComida.x;
-            comidaY = posComida.y;
+            powerup = null;
+            particulas = [];
+            textosFlotantes = [];
+            tieneEscudo = false;
+            tiempoFantasma = 0;
+            tiempoLentitud = 0;
+            comboCount = 0;
+            comboTimer = 0;
+
+            let pos = generarPosicionValida();
+            comidaX = pos.x; comidaY = pos.y;
 
             regenerarObstaculos();
 
             juegoActivo = true;
+            juegoPausado = false;
             menuInicio.classList.add('oculto');
             menuGameOver.classList.add('oculto');
-            
+            menuPausa.classList.add('oculto');
+
             actualizarHUD();
             bucleJuego();
         }
 
+        function togglePausa() {
+            if (!juegoActivo) return;
+            juegoPausado = !juegoPausado;
+            if (juegoPausado) menuPausa.classList.remove('oculto');
+            else { menuPausa.classList.add('oculto'); bucleJuego(); }
+        }
+
         function volverAlMenu() {
             juegoActivo = false;
-            menuRecord.innerText = `Récord Actual: ${highscore}`;
+            juegoPausado = false;
+            actualizarSkinsUI();
             menuGameOver.classList.add('oculto');
+            menuPausa.classList.add('oculto');
             menuInicio.classList.remove('oculto');
         }
 
-        function salirDelJuego() {
-            juegoActivo = false;
-            // Intenta cerrar la pestaña/app
-            window.close();
-            
-            // Si el navegador bloquea window.close(), redirige a una página en blanco o muestra mensaje
-            setTimeout(() => {
-                window.location.href = "about:blank";
-            }, 300);
-        }
-
         function actualizarHUD() {
-            txtPuntos.innerText = `Puntos: ${puntuacion}`;
+            txtPuntos.innerText = `Pts: ${puntuacion}`;
             txtRecord.innerText = `Récord: ${highscore}`;
+            txtEscudo.style.display = tieneEscudo ? 'inline' : 'none';
+
+            if (comboCount > 1) {
+                txtCombo.style.display = 'inline';
+                txtCombo.innerText = `x${comboCount}`;
+            } else {
+                txtCombo.style.display = 'none';
+            }
         }
 
         function bucleJuego() {
-            if (!juegoActivo) return;
+            if (!juegoActivo || juegoPausado) return;
 
-            dx = proximoDx;
-            dy = proximoDy;
+            dx = proximoDx; dy = proximoDy;
             cambioRealizado = false;
 
-            x += dx;
-            y += dy;
+            x += dx; y += dy;
 
-            // Teletransporte en bordes
-            if (x < 0) x = ANCHO - TAMANO_BLOQUE;
-            else if (x >= ANCHO) x = 0;
-            if (y < 0) y = ALTO - TAMANO_BLOQUE;
-            else if (y >= ALTO) y = 0;
+            // Teletransporte
+            if (x < 0) x = ANCHO - TAMANO; else if (x >= ANCHO) x = 0;
+            if (y < 0) y = ALTO - TAMANO; else if (y >= ALTO) y = 0;
 
-            // Choques
+            // Colisiones
             let choqueObstaculo = obstaculos.some(o => o.x === x && o.y === y);
             let choqueCuerpo = cuerpo.some(c => c.x === x && c.y === y);
 
-            if (choqueObstaculo || choqueCuerpo) {
-                sndGameOver();
-                juegoActivo = false;
-                goScore.innerText = `Puntuación Final: ${puntuacion}`;
-                menuGameOver.classList.remove('oculto');
-                return;
+            if ((choqueObstaculo || choqueCuerpo) && tiempoFantasma <= 0) {
+                if (tieneEscudo) {
+                    tieneEscudo = false;
+                    sndEscudo();
+                    crearParticulas(x, y, '#00d9ff', 12);
+                    agregarTextoFlotante("¡ESCUDO ROTO!", x, y, '#00d9ff');
+                    actualizarHUD();
+                } else {
+                    sndGameOver();
+                    crearParticulas(x, y, '#ff3355', 20);
+                    juegoActivo = false;
+                    goScore.innerText = `Puntuación Final: ${puntuacion}`;
+                    goStats.innerText = `Frutas Totales Recogidas: ${totalComidas}`;
+                    menuGameOver.classList.remove('oculto');
+                    return;
+                }
             }
 
             cuerpo.push({ x, y });
             if (cuerpo.length > largoSerpiente) cuerpo.shift();
 
+            // Lógica Combo
+            if (comboTimer > 0) {
+                comboTimer--;
+                if (comboTimer <= 0) { comboCount = 0; actualizarHUD(); }
+            }
+
+            // Temporizadores de Power-ups
+            if (tiempoFantasma > 0) tiempoFantasma--;
+            if (tiempoLentitud > 0) tiempoLentitud--;
+
             // Comer Roja
             if (x === comidaX && y === comidaY) {
                 sndComer();
-                puntuacion += 1;
-                largoSerpiente += 1;
-                let nuevaPos = generarPosicionValida();
-                comidaX = nuevaPos.x;
-                comidaY = nuevaPos.y;
-                intentarGenerarDorada();
+                totalComidas++;
+                localStorage.setItem('snake_pwa_comidas', totalComidas);
 
-                if (puntuacion % 3 === 0) {
-                    fpsActual += DIFICULTADES[idxDificultad].inc;
-                }
-                if (puntuacion > highscore) {
-                    highscore = puntuacion;
-                    localStorage.setItem('snake_pwa_highscore', highscore);
-                }
+                comboCount++;
+                comboTimer = 25; // Ventana de tiempo para combo
+                let ptsGanados = 1 * (comboCount > 1 ? comboCount : 1);
+                puntuacion += ptsGanados;
+                largoSerpiente++;
+
+                crearParticulas(comidaX, comidaY, '#ff3355', 8);
+                if (comboCount > 1) agregarTextoFlotante(`+${ptsGanados} (x${comboCount})`, x, y, '#ff0077');
+
+                let pos = generarPosicionValida();
+                comidaX = pos.x; comidaY = pos.y;
+                intentarGenerarPowerup();
+
+                if (puntuacion % 3 === 0) fpsActual += DIFICULTADES[idxDificultad].inc;
+                if (puntuacion > highscore) { highscore = puntuacion; localStorage.setItem('snake_pwa_highscore', highscore); }
                 actualizarHUD();
             }
 
-            // Comer Dorada
-            if (doradaX !== null && x === doradaX && y === doradaY) {
-                sndDorada();
-                puntuacion += 3;
-                largoSerpiente += 1;
-                doradaX = null;
-                doradaY = null;
-                tiempoDorada = 0;
-                regenerarObstaculos();
-
-                if (puntuacion > highscore) {
-                    highscore = puntuacion;
-                    localStorage.setItem('snake_pwa_highscore', highscore);
+            // Comer Power-up
+            if (powerup !== null && x === powerup.x && y === powerup.y) {
+                sndPowerup();
+                if (powerup.tipo === 'dorada') {
+                    puntuacion += 3;
+                    largoSerpiente++;
+                    crearParticulas(x, y, '#ffd700', 12);
+                    agregarTextoFlotante("+3 PTS", x, y, '#ffd700');
+                    regenerarObstaculos();
+                } else if (powerup.tipo === 'azul') {
+                    tiempoLentitud = 50;
+                    crearParticulas(x, y, '#0088ff', 10);
+                    agregarTextoFlotante("¡LENTITUD!", x, y, '#0088ff');
+                } else if (powerup.tipo === 'fantasma') {
+                    tiempoFantasma = 45;
+                    crearParticulas(x, y, '#aa00ff', 10);
+                    agregarTextoFlotante("¡FANTASMA!", x, y, '#aa00ff');
+                } else if (powerup.tipo === 'escudo') {
+                    tieneEscudo = true;
+                    crearParticulas(x, y, '#00d9ff', 10);
+                    agregarTextoFlotante("¡ESCUDO!", x, y, '#00d9ff');
                 }
+
+                powerup = null;
+                if (puntuacion > highscore) { highscore = puntuacion; localStorage.setItem('snake_pwa_highscore', highscore); }
                 actualizarHUD();
             }
 
-            // Temporizador Dorada
-            if (doradaX !== null) {
-                tiempoDorada--;
-                if (tiempoDorada <= 0) {
-                    doradaX = null;
-                    doradaY = null;
-                }
+            if (powerup !== null) {
+                powerup.tiempo--;
+                if (powerup.tiempo <= 0) powerup = null;
             }
 
             dibujar();
-            setTimeout(bucleJuego, 1000 / fpsActual);
+
+            let speed = (tiempoLentitud > 0) ? fpsActual * 0.6 : fpsActual;
+            setTimeout(bucleJuego, 1000 / speed);
         }
 
         function dibujar() {
-            ctx.fillStyle = "#000000";
+            ctx.fillStyle = "#050508";
             ctx.fillRect(0, 0, ANCHO, ALTO);
 
-            // Rejilla
-            ctx.strokeStyle = "#191919";
-            for (let cx = 0; cx < ANCHO; cx += TAMANO_BLOQUE) {
+            // Rejilla Neón
+            ctx.strokeStyle = "#12121a";
+            for (let cx = 0; cx < ANCHO; cx += TAMANO) {
                 ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, ALTO); ctx.stroke();
             }
-            for (let cy = 0; cy < ALTO; cy += TAMANO_BLOQUE) {
+            for (let cy = 0; cy < ALTO; cy += TAMANO) {
                 ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(ANCHO, cy); ctx.stroke();
             }
 
             // Obstáculos
-            ctx.fillStyle = "#808080";
-            obstaculos.forEach(o => ctx.fillRect(o.x, o.y, TAMANO_BLOQUE, TAMANO_BLOQUE));
+            ctx.fillStyle = "#33334d";
+            obstaculos.forEach(o => {
+                ctx.fillRect(o.x + 1, o.y + 1, TAMANO - 2, TAMANO - 2);
+            });
 
             // Manzana Roja
-            ctx.fillStyle = "#FF0000";
-            ctx.fillRect(comidaX, comidaY, TAMANO_BLOQUE, TAMANO_BLOQUE);
+            ctx.fillStyle = "#ff3355";
+            ctx.beginPath();
+            ctx.arc(comidaX + TAMANO/2, comidaY + TAMANO/2, TAMANO/2 - 2, 0, Math.PI * 2);
+            ctx.fill();
 
-            // Manzana Dorada (Parpadeo)
-            if (doradaX !== null) {
-                if (tiempoDorada > 20 || (tiempoDorada % 4 < 2)) {
-                    ctx.fillStyle = "#FFD700";
-                    ctx.fillRect(doradaX, doradaY, TAMANO_BLOQUE, TAMANO_BLOQUE);
+            // Power-up
+            if (powerup !== null) {
+                if (powerup.tiempo > 15 || (powerup.tiempo % 4 < 2)) {
+                    if (powerup.tipo === 'dorada') ctx.fillStyle = "#ffd700";
+                    else if (powerup.tipo === 'azul') ctx.fillStyle = "#0088ff";
+                    else if (powerup.tipo === 'fantasma') ctx.fillStyle = "#aa00ff";
+                    else if (powerup.tipo === 'escudo') ctx.fillStyle = "#00d9ff";
+
+                    ctx.fillRect(powerup.x + 2, powerup.y + 2, TAMANO - 4, TAMANO - 4);
                 }
-                // Barra de tiempo dorada
-                ctx.fillStyle = "#FFD700";
-                let anchoBarra = Math.floor(100 * (tiempoDorada / DURACION_DORADA_MAX));
-                ctx.fillRect(ANCHO / 2 - 50, 6, anchoBarra, 4);
             }
 
-            // Serpiente
-            cuerpo.forEach((bloque, idx) => {
-                ctx.fillStyle = (idx === cuerpo.length - 1) ? "#00FF00" : "#00B400";
-                ctx.fillRect(bloque.x, bloque.y, TAMANO_BLOQUE, TAMANO_BLOQUE);
+            // Serpiente con Skin
+            cuerpo.forEach((b, i) => {
+                let esCabeza = (i === cuerpo.length - 1);
+                let alpha = (tiempoFantasma > 0) ? 0.4 : 1.0;
+
+                if (skinSeleccionada === 0) { // Clásica
+                    ctx.fillStyle = esCabeza ? `rgba(0, 255, 136, ${alpha})` : `rgba(0, 170, 85, ${alpha})`;
+                } else if (skinSeleccionada === 1) { // Neón
+                    ctx.fillStyle = esCabeza ? `rgba(0, 229, 255, ${alpha})` : `rgba(0, 102, 255, ${alpha})`;
+                } else if (skinSeleccionada === 2) { // Rainbow
+                    let hue = (i * 20 + Date.now() / 10) % 360;
+                    ctx.fillStyle = `hsla(${hue}, 100%, 50%, ${alpha})`;
+                }
+
+                ctx.fillRect(b.x + 1, b.y + 1, TAMANO - 2, TAMANO - 2);
+            });
+
+            // Partículas
+            particulas.forEach((p, idx) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.04;
+                if (p.life <= 0) particulas.splice(idx, 1);
+                else {
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.life;
+                    ctx.fillRect(p.x, p.y, 4, 4);
+                    ctx.globalAlpha = 1.0;
+                }
+            });
+
+            // Textos Flotantes
+            textosFlotantes.forEach((tf, idx) => {
+                tf.y -= 0.8; tf.life -= 0.03;
+                if (tf.life <= 0) textosFlotantes.splice(idx, 1);
+                else {
+                    ctx.fillStyle = tf.color;
+                    ctx.font = "bold 13px Arial";
+                    ctx.globalAlpha = tf.life;
+                    ctx.fillText(tf.txt, tf.x - 5, tf.y);
+                    ctx.globalAlpha = 1.0;
+                }
             });
         }
 
-        // --- GESTOS TÁCTILES (SWIPES) ---
+        // --- CONTROLES TÁCTILES Y TECLADO ---
         let xInicio = null, yInicio = null;
-
         window.addEventListener('touchstart', e => {
-            xInicio = e.touches[0].clientX;
-            yInicio = e.touches[0].clientY;
+            xInicio = e.touches[0].clientX; yInicio = e.touches[0].clientY;
         }, { passive: false });
 
         window.addEventListener('touchmove', e => {
-            if (!xInicio || !yInicio || cambioRealizado || !juegoActivo) return;
+            if (!xInicio || !yInicio || cambioRealizado || !juegoActivo || juegoPausado) return;
 
             let xDif = xInicio - e.touches[0].clientX;
             let yDif = yInicio - e.touches[0].clientY;
 
             if (Math.abs(xDif) > Math.abs(yDif)) {
-                if (xDif > 0 && dx === 0) { proximoDx = -TAMANO_BLOQUE; proximoDy = 0; cambioRealizado = true; }
-                else if (xDif < 0 && dx === 0) { proximoDx = TAMANO_BLOQUE; proximoDy = 0; cambioRealizado = true; }
+                if (xDif > 0 && dx === 0) { proximoDx = -TAMANO; proximoDy = 0; cambioRealizado = true; }
+                else if (xDif < 0 && dx === 0) { proximoDx = TAMANO; proximoDy = 0; cambioRealizado = true; }
             } else {
-                if (yDif > 0 && dy === 0) { proximoDx = 0; proximoDy = -TAMANO_BLOQUE; cambioRealizado = true; }
-                else if (yDif < 0 && dy === 0) { proximoDx = 0; proximoDy = TAMANO_BLOQUE; cambioRealizado = true; }
+                if (yDif > 0 && dy === 0) { proximoDx = 0; proximoDy = -TAMANO; cambioRealizado = true; }
+                else if (yDif < 0 && dy === 0) { proximoDx = 0; proximoDy = TAMANO; cambioRealizado = true; }
             }
-            xInicio = null;
-            yInicio = null;
+            xInicio = null; yInicio = null;
         }, { passive: false });
 
-        // Controles de Teclado
         window.addEventListener('keydown', e => {
-            if (!juegoActivo || cambioRealizado) return;
-            if ((e.key === 'ArrowLeft' || e.key === 'a') && dx === 0) { proximoDx = -TAMANO_BLOQUE; proximoDy = 0; cambioRealizado = true; }
-            if ((e.key === 'ArrowRight' || e.key === 'd') && dx === 0) { proximoDx = TAMANO_BLOQUE; proximoDy = 0; cambioRealizado = true; }
-            if ((e.key === 'ArrowUp' || e.key === 'w') && dy === 0) { proximoDx = 0; proximoDy = -TAMANO_BLOQUE; cambioRealizado = true; }
-            if ((e.key === 'ArrowDown' || e.key === 's') && dy === 0) { proximoDx = 0; proximoDy = TAMANO_BLOQUE; cambioRealizado = true; }
+            if (e.key === 'p' || e.key === 'P' || e.key === ' ') { togglePausa(); return; }
+            if (!juegoActivo || juegoPausado || cambioRealizado) return;
+
+            if ((e.key === 'ArrowLeft' || e.key === 'a') && dx === 0) { proximoDx = -TAMANO; proximoDy = 0; cambioRealizado = true; }
+            if ((e.key === 'ArrowRight' || e.key === 'd') && dx === 0) { proximoDx = TAMANO; proximoDy = 0; cambioRealizado = true; }
+            if ((e.key === 'ArrowUp' || e.key === 'w') && dy === 0) { proximoDx = 0; proximoDy = -TAMANO; cambioRealizado = true; }
+            if ((e.key === 'ArrowDown' || e.key === 's') && dy === 0) { proximoDx = 0; proximoDy = TAMANO; cambioRealizado = true; }
         });
 
-        // Registrar Service Worker para PWA
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(() => {});
         }
